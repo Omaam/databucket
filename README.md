@@ -1,6 +1,11 @@
 # databucket
 Super-easy data access.
 
+
+# Requirements
+* HEASoft: this software use HEASoft command XSELECT to create light curve.
+
+
 # Usage
 Super simple.
 
