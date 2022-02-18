@@ -42,18 +42,24 @@ def _make_bashscript(path_to_event: str, dt: float,
     """
 
     rate_kev2pi = _calc_kev2pi(satelite)
-
     pi_lower = rate_kev2pi * energy_range[0]
     pi_upper = rate_kev2pi * energy_range[1]
 
     xsel_cmd = _make_command(dt, pi_lower, pi_upper)
 
-    with open("xselect_script.sh", "w") as f:
+    path_to_script = "xselect_script.sh"
+    with open(path_to_script, "w") as f:
         f.write(xsel_cmd)
 
-    bash_cmd = ["bash", "xselect_script.sh"]
+    return path_to_script
+
+
+def run_xselect_curve(path_to_event: str, dt: float,
+                      energy_range: list,
+                      satelite: str = "NICER"):
+
+    path_to_script = _make_bashscript(
+        path_to_event, dt, energy_range, satelite)
+
+    bash_cmd = ["bash", path_to_script]
     subprocess.run(bash_cmd)
-
-
-def run_xselect_curve():
-    pass
