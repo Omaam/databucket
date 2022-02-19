@@ -6,8 +6,9 @@ from astropy.table import Table
 # import numpy as np
 import pandas as pd
 
-from databucket import xselect_handler
 from databucket import configure
+from databucket import name
+from databucket import xselect_handler
 
 
 def _acquire_dirname(object_name: str):
@@ -55,8 +56,8 @@ class DataBucket():
         self.satelite = satelite.lower()
 
         path_to_bucket = configure.acquire_backetpath()
-        dirname = _acquire_dirname(object_name)
-        self.path_to_object = "/".join([path_to_bucket, dirname])
+        object_name = name.convert_objectname(object_name)
+        self.path_to_object = "/".join([path_to_bucket, object_name])
 
     def request_curve(self, obsid: str, dt: float,
                       energy_range_kev: list,
@@ -90,6 +91,11 @@ class DataBucket():
 
         table = Table.read(path_to_curve, format="fits", hdu=1)
         df = table.to_pandas()
+
+        if save_to is not None:
+            savefile = os.path.basename(path_to_curve)
+            savepath = "/".join([save_to, savefile])
+            df.to_csv(savepath, index=None)
 
         return df
 
