@@ -1,12 +1,29 @@
 """Module for configuration.
+
+TODO:
+    * (Omama) Complete this module to make proper configuration.
 """
 import glob
 import os
 import subprocess
 import re
 
+from databucket import name
 
-def link_eventfiles(pathname_glob: str):
+
+def acquire_backetpath():
+    try:
+        path_to_bucket = os.environ["DATABUCKET"]
+    except KeyError:
+        raise KeyError(
+                "You must specify bucket path to DATABUCKET. "
+                "For example,DATABUCKET=/path/to/bucket;"
+                "export DATABUCKET.")
+    return path_to_bucket
+
+
+def update_eventfiles(object_name: str, satelite: str,
+                      pathname_glob: str, clobber: bool = False):
 
     event_files = sorted(glob.glob(pathname_glob))
 
@@ -15,41 +32,23 @@ def link_eventfiles(pathname_glob: str):
         file_name = path_to_event.split("/")[-1]
         obsid = re.findall("[0-9]{10}", file_name)[0]
 
-        path_to_obsid_in_bucket = PATH_TO_BUCKET + "/" + obsid
-        os.makedirs(path_to_obsid_in_bucket, exist_ok=True)
+        object_name = name.convert_objectname(object_name)
+        satelite = name.convert_satelitename(satelite)
 
-        new_name_event = PATH_TO_BUCKET + "/" + f"{obsid}/{obsid}.evt"
-        if os.path.exists(new_name_event) is False:
+        path_to_bucket = acquire_backetpath()
+        path_to_dir_in_bucket = "/".join(
+            [path_to_bucket, object_name, satelite, obsid]
+        )
+        os.makedirs(path_to_dir_in_bucket, exist_ok=True)
+
+        new_name_event = "/".join(
+            [path_to_bucket, object_name, satelite,
+             obsid, f"event{obsid}.evt"]
+        )
+
+        do_update = (os.path.exists(new_name_event) is False) or \
+                    (clobber is True)
+        if do_update is True:
             cmd = ["ln", "-s", path_to_event, new_name_event]
             subprocess.run(cmd)
-            print("link from\n{} to\n{}".format(
-                  path_to_event, new_name_event))
-
-
-def update_eventfiles(pathname_glob: str):
-
-    event_files = sorted(glob.glob(pathname_glob))
-
-    for path_to_event in event_files:
-
-        file_name = path_to_event.split("/")[-1]
-        obsid = re.findall("[0-9]{10}", file_name)[0]
-
-        path_to_obsid_in_bucket = PATH_TO_BUCKET + "/" + obsid
-        os.makedirs(path_to_obsid_in_bucket, exist_ok=True)
-
-        new_name_event = PATH_TO_BUCKET + "/" + f"{obsid}/{obsid}.evt"
-        if os.path.exists(new_name_event) is False:
-            cmd = ["cp", path_to_event, new_name_event]
-
-            subprocess.run(cmd)
-
-
-if __name__ == "__main__":
-
-    pathname = "/home/omama/Data/MAXI_J1820p070/nicer/RawData_Old/" \
-               "*/xti/event_cl/bc*.evt"
-
-    PATH_TO_BUCKET = "/home/omama/Data/Bucket"
-
-    link_eventfiles(pathname)
+            print(f"update {new_name_event}")

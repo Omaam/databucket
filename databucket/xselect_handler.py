@@ -1,5 +1,6 @@
 """The script to handle XSELECT in bash.
 """
+import os
 import subprocess
 
 
@@ -8,20 +9,24 @@ def _calc_kev2pi(satelite: str):
         return 100
 
 
-def _make_command(dt, pi_lower, pi_upper):
+def _make_command(path_to_event, path_to_curve,
+                  dt, pi_lower, pi_upper):
+
+    event_file = path_to_event.split("/")[-1]
+    path_to_dir = "/".join(path_to_event.split("/")[:-1])
 
     xsel_cmd = f"""
         xselect << EOF
         xsel
-        read eve bcTEST_OBSID_0mpu7_cl.evt
-        /home/omama/Soft/git/databucket/databucket
+        read event {event_file}
+        {path_to_dir}
         yes
 
         set binsize {dt}
 
         filter pha_cutoff {pi_lower} {pi_upper}
         ext curve
-        save curve ../fits/lcTEST_OBSID_05t1keV_dt{dt}.fits
+        save curve {path_to_curve}
 
         exit
         no
@@ -30,12 +35,13 @@ def _make_command(dt, pi_lower, pi_upper):
 
     delete_space = "        "
     xsel_cmd = xsel_cmd.replace(delete_space, "")
-    print(xsel_cmd)
 
     return xsel_cmd
 
 
-def _make_bashscript(path_to_event: str, dt: float,
+def _make_bashscript(path_to_event: str,
+                     path_to_curve: str,
+                     dt: float,
                      energy_range: list,
                      satelite: str = "NICER"):
     """
@@ -45,7 +51,8 @@ def _make_bashscript(path_to_event: str, dt: float,
     pi_lower = rate_kev2pi * energy_range[0]
     pi_upper = rate_kev2pi * energy_range[1]
 
-    xsel_cmd = _make_command(dt, pi_lower, pi_upper)
+    xsel_cmd = _make_command(path_to_event, path_to_curve,
+                             dt, pi_lower, pi_upper)
 
     path_to_script = "xselect_script.sh"
     with open(path_to_script, "w") as f:
@@ -54,12 +61,17 @@ def _make_bashscript(path_to_event: str, dt: float,
     return path_to_script
 
 
-def run_xselect_curve(path_to_event: str, dt: float,
+def run_xselect_curve(path_to_event: str,
+                      path_to_curve: str,
+                      dt: float,
                       energy_range: list,
                       satelite: str = "NICER"):
 
     path_to_script = _make_bashscript(
-        path_to_event, dt, energy_range, satelite)
+        path_to_event, path_to_curve, dt,
+        energy_range, satelite)
 
     bash_cmd = ["bash", path_to_script]
     subprocess.run(bash_cmd)
+
+    os.remove(path_to_script)

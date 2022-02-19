@@ -3,21 +3,11 @@
 import os
 
 from astropy.table import Table
+# import numpy as np
+import pandas as pd
 
-
-def _load_bucketpath():
-    try:
-        with open("./path_to_bucket.txt", "r") as f:
-            path_to_bucket = f.read().rstrip()
-
-    except FileNotFoundError as e:
-        current_dir = os.getcwd()
-        print(e)
-        print("You must make 'path_to_bucket.txt' in"
-              "%s to indicate the bucket path.",
-              current_dir)
-
-    return path_to_bucket
+from databucket import xselect_handler
+from databucket import configure
 
 
 def _acquire_dirname(object_name: str):
@@ -29,8 +19,27 @@ def _acquire_dirname(object_name: str):
     return dirname
 
 
-def _must_run_xselect(path_to_file, clobber):
-    isexist = _check_existence(path_to_file)
+def _convert_value2string(value: int or float):
+    value_str = str(value).replace(".", "p")
+    return value_str
+
+
+def _convert_enrange2string(energy_range_kev):
+    energy_lower = _convert_value2string(energy_range_kev[0])
+    energy_upper = _convert_value2string(energy_range_kev[1])
+    return energy_lower + "t" + energy_upper
+
+
+def _get_curvename(obsid, dt, energy_range_kev):
+    dt_exp = "{:.0e}".format(dt)
+    enrange = _convert_enrange2string(energy_range_kev)
+    name_curve = f"curve{obsid}_dt{dt_exp}_range{enrange}kev.lc"
+
+    return name_curve
+
+
+def _must_run_xselect(path_to_curve, clobber):
+    isexist = os.path.exists(path_to_curve)
     if (clobber is True) or (isexist is False):
         return True
     return False
@@ -40,43 +49,69 @@ class DataBucket():
     """
     """
 
-    def __init__(self, target_name):
+    def __init__(self, object_name, satelite):
 
-        self.target_name = target_name
+        self.object_name = object_name
+        self.satelite = satelite.lower()
 
-        path_to_bucket = _load_bucketpath()
-        dirname = _acquire_dirname(target_name)
+        path_to_bucket = configure.acquire_backetpath()
+        dirname = _acquire_dirname(object_name)
         self.path_to_object = "/".join([path_to_bucket, dirname])
 
     def request_curve(self, obsid: str, dt: float,
-                      energy_range: list, save_to: str = None,
+                      energy_range_kev: list,
+                      save_to: str = None,
                       clobber: bool = False):
         """
         """
-        _check_obsid(self.target_name, obsid)
 
-        dt_exp = "{:.1e}".format(dt)
-        enrange = _conver_enrange(energy_range_kev)
-        filename = "dt%s_enrange%skev.lc".format(dt_exp, enrange)
-        path_to_file = "/".join([self.path_to_object, obsid, filename])
+        name_event = f"event{obsid}.evt"
 
-        mustrun = _must_run_xselect(path_to_file, clobber)
+        # Check existence for event file.
+        path_to_event = "/".join([self.path_to_object, self.satelite,
+                                  obsid, name_event])
+        if os.path.exists(path_to_event) is False:
+            raise FileExistsError(
+                f"{path_to_event} does not exists."
+                )
+
+        name_curve = _get_curvename(obsid, dt, energy_range_kev)
+        path_to_curve = "/".join(
+            [self.path_to_object, self.satelite,
+             obsid, name_curve]
+        )
+
+        # Run XSELECT, if needed.
+        mustrun = _must_run_xselect(path_to_curve, clobber)
         if mustrun is True:
-            _run_xselect()
+            xselect_handler.run_xselect_curve(
+                path_to_event, path_to_curve,
+                dt, energy_range_kev, "NICER")
 
-        table = Table.load(path_to_file, format="fits", hdu=1)
+        table = Table.read(path_to_curve, format="fits", hdu=1)
+        df = table.to_pandas()
 
-        return table
+        return df
 
     def request_event(self, obsid: str, clobber: bool = False):
         """
         """
-        _check_obsid(self.target_name, obsid)
 
-        filename = "event.evt.gz"
-        path_to_file = "/".join([self.path_to_object, obsid, filename])
+        filename = f"{obsid}.evt"
 
-        table = Table.load(path_to_file, format="fits", hdu=1)
-        table = Table.load()
+        path_to_event_evt = "/".join(
+            [self.path_to_object, obsid, filename])
+        if os.path.exists(path_to_event_evt) is False:
+            raise FileExistsError(
+                f"{path_to_event_evt} does not exists."
+                )
 
-        return table
+        path_to_event_csv = "/".join(
+            [self.path_to_object, obsid, filename])
+        if os.path.exists(path_to_event_csv) is False:
+            tbl = Table.read(path_to_event_evt, format="fits", hdu=1)
+            df = tbl.to_pandas()
+        else:
+            df = pd.read_csv(path_to_event_csv, index=None)
+
+        return df
