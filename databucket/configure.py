@@ -43,7 +43,7 @@ def update_eventfiles(object_name: str, satelite: str,
 
         new_name_event = "/".join(
             [path_to_bucket, object_name, satelite,
-             obsid, f"event{obsid}.evt"]
+             obsid, f"event_{obsid}.evt"]
         )
 
         do_update = (os.path.exists(new_name_event) is False) or \

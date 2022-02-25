@@ -34,7 +34,7 @@ def _convert_enrange2string(energy_range_kev):
 def _get_curvename(obsid, dt, energy_range_kev):
     dt_exp = "{:.0e}".format(dt)
     enrange = _convert_enrange2string(energy_range_kev)
-    name_curve = f"curve{obsid}_dt{dt_exp}_range{enrange}kev.lc"
+    name_curve = f"curve_{obsid}_dt{dt_exp}_range{enrange}kev.lc"
 
     return name_curve
 
@@ -62,11 +62,12 @@ class DataBucket():
     def request_curve(self, obsid: str, dt: float,
                       energy_range_kev: list,
                       save_to: str = None,
+                      save_csv: bool = True,
                       clobber: bool = False):
         """
         """
 
-        name_event = f"event{obsid}.evt"
+        name_event = f"event_{obsid}.evt"
 
         # Check existence for event file.
         path_to_event = "/".join([self.path_to_object, self.satelite,
@@ -83,6 +84,8 @@ class DataBucket():
         )
 
         # Run XSELECT, if needed.
+        if clobber is True:
+            os.remove(path_to_curve)
         mustrun = _must_run_xselect(path_to_curve, clobber)
         if mustrun is True:
             xselect_handler.run_xselect_curve(
@@ -94,8 +97,13 @@ class DataBucket():
 
         if save_to is not None:
             savefile = os.path.basename(path_to_curve)
+            savefile = os.path.splitext(savefile)[0] + ".csv"
             savepath = "/".join([save_to, savefile])
             df.to_csv(savepath, index=None)
+
+        if save_csv is True:
+            path_to_csv = os.path.splitext(path_to_curve)[0] + ".csv"
+            df.to_csv(path_to_csv, index=None)
 
         return df
 
@@ -103,7 +111,7 @@ class DataBucket():
         """
         """
 
-        filename = f"{obsid}.evt"
+        filename = f"event_{obsid}.evt"
 
         path_to_event_evt = "/".join(
             [self.path_to_object, obsid, filename])

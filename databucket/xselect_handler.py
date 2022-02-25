@@ -1,5 +1,7 @@
 """The script to handle XSELECT in bash.
 """
+import datetime
+import hashlib
 import os
 import subprocess
 
@@ -7,6 +9,12 @@ import subprocess
 def _calc_kev2pi(satelite: str):
     if satelite == "NICER":
         return 100
+
+
+def _end_xsekect(path_to_script):
+    os.remove(path_to_script)
+    if os.path.exists("xselect.log"):
+        os.remove("xselect.log")
 
 
 def _make_command(path_to_event, path_to_curve,
@@ -48,13 +56,16 @@ def _make_bashscript(path_to_event: str,
     """
 
     rate_kev2pi = _calc_kev2pi(satelite)
-    pi_lower = rate_kev2pi * energy_range[0]
-    pi_upper = rate_kev2pi * energy_range[1]
+    pi_lower = int(rate_kev2pi * energy_range[0])
+    pi_upper = int(rate_kev2pi * energy_range[1])
 
     xsel_cmd = _make_command(path_to_event, path_to_curve,
                              dt, pi_lower, pi_upper)
 
-    path_to_script = "xselect_script.sh"
+    now = bytes(datetime.datetime.now().isoformat(), "utf-8")
+    hash_now = hashlib.sha256(now).hexdigest()
+    path_to_script = f"xselect_script_{hash_now}.sh"
+
     with open(path_to_script, "w") as f:
         f.write(xsel_cmd)
 
@@ -72,6 +83,11 @@ def run_xselect_curve(path_to_event: str,
         energy_range, satelite)
 
     bash_cmd = ["bash", path_to_script]
-    subprocess.run(bash_cmd)
 
-    os.remove(path_to_script)
+    try:
+        subprocess.run(bash_cmd)
+    except KeyboardInterrupt:
+        _end_xsekect(path_to_script)
+        raise KeyboardInterrupt
+    else:
+        _end_xsekect(path_to_script)
