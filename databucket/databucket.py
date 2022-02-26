@@ -46,6 +46,12 @@ def _must_run_xselect(path_to_curve, clobber):
     return False
 
 
+def _tidy_float2int(value):
+    if value == int(value):
+        value = int(value)
+    return value
+
+
 class DataBucket():
     """
     """
@@ -77,15 +83,18 @@ class DataBucket():
                 f"{path_to_event} does not exists."
                 )
 
+        energy_range_kev[0] = _tidy_float2int(energy_range_kev[0])
+        energy_range_kev[1] = _tidy_float2int(energy_range_kev[1])
+
         name_curve = _get_curvename(obsid, dt, energy_range_kev)
         path_to_curve = "/".join(
             [self.path_to_object, self.satelite,
              obsid, name_curve]
         )
 
-        # Run XSELECT, if needed.
-        if clobber is True:
+        if (os.path.exists(path_to_curve) is True) and (clobber is True):
             os.remove(path_to_curve)
+
         mustrun = _must_run_xselect(path_to_curve, clobber)
         if mustrun is True:
             xselect_handler.run_xselect_curve(

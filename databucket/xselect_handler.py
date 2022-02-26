@@ -1,20 +1,14 @@
 """The script to handle XSELECT in bash.
 """
 import datetime
-import hashlib
 import os
+import shutil
 import subprocess
 
 
 def _calc_kev2pi(satelite: str):
     if satelite == "NICER":
         return 100
-
-
-def _end_xsekect(path_to_script):
-    os.remove(path_to_script)
-    if os.path.exists("xselect.log"):
-        os.remove("xselect.log")
 
 
 def _make_command(path_to_event, path_to_curve,
@@ -62,9 +56,7 @@ def _make_bashscript(path_to_event: str,
     xsel_cmd = _make_command(path_to_event, path_to_curve,
                              dt, pi_lower, pi_upper)
 
-    now = bytes(datetime.datetime.now().isoformat(), "utf-8")
-    hash_now = hashlib.sha256(now).hexdigest()
-    path_to_script = f"xselect_script_{hash_now}.sh"
+    path_to_script = "xselect_script.sh"
 
     with open(path_to_script, "w") as f:
         f.write(xsel_cmd)
@@ -72,6 +64,27 @@ def _make_bashscript(path_to_event: str,
     return path_to_script
 
 
+def change_directory(func):
+
+    def _change_directory(*args, **kargs):
+        now = datetime.datetime.now().isoformat()
+        workdir = "xselect_" + now
+
+        try:
+            os.mkdir(workdir)
+            os.chdir(workdir)
+            func(*args, **kargs)
+            os.chdir("..")
+            shutil.rmtree(workdir)
+
+        except KeyboardInterrupt:
+            os.chdir("..")
+            shutil.rmtree(workdir)
+
+    return _change_directory
+
+
+@change_directory
 def run_xselect_curve(path_to_event: str,
                       path_to_curve: str,
                       dt: float,
@@ -82,12 +95,7 @@ def run_xselect_curve(path_to_event: str,
         path_to_event, path_to_curve, dt,
         energy_range, satelite)
 
+    print(os.getcwd())
     bash_cmd = ["bash", path_to_script]
 
-    try:
-        subprocess.run(bash_cmd)
-    except KeyboardInterrupt:
-        _end_xsekect(path_to_script)
-        raise KeyboardInterrupt
-    else:
-        _end_xsekect(path_to_script)
+    subprocess.run(bash_cmd)
