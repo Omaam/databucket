@@ -1,6 +1,7 @@
 """Bucket source code.
 """
 import os
+import shutil
 
 from astropy.table import Table
 # import numpy as np
@@ -67,7 +68,7 @@ class DataBucket():
 
     def request_curve(self, obsid: str, dt: float,
                       energy_range_kev: list,
-                      save_to: str = None,
+                      save_fits_to: str = None,
                       save_csv: bool = True,
                       clobber: bool = False):
         """
@@ -104,15 +105,15 @@ class DataBucket():
         table = Table.read(path_to_curve, format="fits", hdu=1)
         df = table.to_pandas()
 
-        if save_to is not None:
-            savefile = os.path.basename(path_to_curve)
-            savefile = os.path.splitext(savefile)[0] + ".csv"
-            savepath = "/".join([save_to, savefile])
-            df.to_csv(savepath, index=None)
-
         if save_csv is True:
-            path_to_csv = os.path.splitext(path_to_curve)[0] + ".csv"
+            path_to_csv = os.path.splitext(
+                path_to_curve)[0] + ".csv"
             df.to_csv(path_to_csv, index=None)
+
+        if save_fits_to is not None:
+            savefile = os.path.basename(path_to_curve)
+            savefile = os.path.splitext(savefile)[0] + ".fits"
+            shutil.copyfile(path_to_curve, savefile)
 
         return df
 
