@@ -46,6 +46,15 @@ def update_eventfiles(object_name: str, satelite: str,
              obsid, f"event_{obsid}.evt"]
         )
 
+        if clobber is True:
+            print(path_to_event)
+            do_remove = input("Do you remove rhese files. (y/n)")
+            if do_remove == "y":
+                cmd_rm = ["rm", path_to_event]
+                subprocess.run(cmd_rm)
+            else:
+                print("At this time, these files will not be deleted.")
+
         do_update = (os.path.exists(new_name_event) is False) or \
                     (clobber is True)
         if do_update is True:
