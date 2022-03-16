@@ -53,7 +53,7 @@ def update_eventfiles(object_name: str, satelite: str,
                 cmd_rm = ["rm", path_to_event]
                 subprocess.run(cmd_rm)
             else:
-                print("At this time, these files will not be deleted.")
+                print("These files will not be deleted.")
 
         do_update = (os.path.exists(new_name_event) is False) or \
                     (clobber is True)
