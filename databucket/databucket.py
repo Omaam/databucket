@@ -112,7 +112,10 @@ class DataBucket():
 
         if save_fits_to is not None:
             savefile = os.path.basename(path_to_curve)
-            savefile = os.path.splitext(savefile)[0] + ".fits"
+            savefile = os.path.join(
+                save_fits_to,
+                os.path.splitext(savefile)[0] + ".fits"
+            )
             shutil.copyfile(path_to_curve, savefile)
 
         return df
