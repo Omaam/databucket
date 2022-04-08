@@ -2,6 +2,7 @@
 """
 import os
 import shutil
+import warnings
 
 from astropy.table import Table
 # import numpy as np
@@ -50,7 +51,6 @@ def _must_run_xselect(path_to_curve, clobber):
 def _tidy_float2int(value):
     if value == int(value):
         value = int(value)
-    print(value)
     return value
 
 
@@ -69,6 +69,7 @@ class DataBucket():
 
     def request_curve(self, obsid: str, dt: float,
                       energy_range_kev: list,
+                      copy_fits_to: str = None,
                       save_fits_to: str = None,
                       save_csv: bool = True,
                       clobber: bool = False):
@@ -113,6 +114,14 @@ class DataBucket():
             df.to_csv(path_to_csv, index=None)
 
         if save_fits_to is not None:
+            warnings.warn(
+                "Don't use argment 'save_fits_to'."
+                "Instead, use argment 'copy_fits_to'.",
+                UserWarning
+            )
+            copy_fits_to = save_fits_to
+
+        if copy_fits_to is not None:
             savefile = os.path.basename(path_to_curve)
             savefile = os.path.join(
                 save_fits_to,
