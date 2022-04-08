@@ -27,6 +27,10 @@ def update_eventfiles(object_name: str, satelite: str,
 
     event_files = sorted(glob.glob(pathname_glob))
 
+    if clobber is True:
+        y_or_n = input("Do you really renew event files? (y/n)")
+        clobber = True if y_or_n == "y" else False
+
     for path_to_event in event_files:
 
         file_name = path_to_event.split("/")[-1]
@@ -47,13 +51,9 @@ def update_eventfiles(object_name: str, satelite: str,
         )
 
         if clobber is True:
-            print(path_to_event)
-            do_remove = input("Do you remove rhese files. (y/n)")
-            if do_remove == "y":
-                cmd_rm = ["rm", path_to_event]
-                subprocess.run(cmd_rm)
-            else:
-                print("These files will not be deleted.")
+            cmd_rm = ["rm", new_name_event]
+            subprocess.run(cmd_rm)
+            print("removed {}".format(path_to_event))
 
         do_update = (os.path.exists(new_name_event) is False) or \
                     (clobber is True)

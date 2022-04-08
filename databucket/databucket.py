@@ -50,6 +50,7 @@ def _must_run_xselect(path_to_curve, clobber):
 def _tidy_float2int(value):
     if value == int(value):
         value = int(value)
+    print(value)
     return value
 
 
@@ -84,6 +85,7 @@ class DataBucket():
                 f"{path_to_event} does not exists."
                 )
 
+        energy_range_kev = list(energy_range_kev)
         energy_range_kev[0] = _tidy_float2int(energy_range_kev[0])
         energy_range_kev[1] = _tidy_float2int(energy_range_kev[1])
 
