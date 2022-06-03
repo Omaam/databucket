@@ -57,13 +57,20 @@ def update_eventfiles(object_name: str, satelite: str,
         )
 
         if clobber is True:
-            delete_files = "/".join(
-                [path_to_bucket, object_name, satelite, obsid, "*"]
-            )
 
-            cmd_rm = ["rm", delete_files]
+            path_to_archives = path_to_bucket + "/Archives"
+            os.makedirs(path_to_archives, exist_ok=True)
+
+            deleted_dir = "/".join(
+                [path_to_bucket, object_name, satelite, obsid]
+            )
+            cmd_cp = ["cp", "-r", deleted_dir, path_to_archives]
+            subprocess.run(cmd_cp)
+            print("copy {} to {}".format(deleted_dir, path_to_archives))
+
+            cmd_rm = ["rm", "-r", deleted_dir]
             subprocess.run(cmd_rm)
-            print("removed {}".format(delete_files))
+            print("remove {}".format(deleted_dir))
 
         do_update = (os.path.exists(new_name_event) is False) or \
                     (clobber is True)
