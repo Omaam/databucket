@@ -17,8 +17,10 @@ def _make_command(path_to_event, path_to_curve,
     event_file = path_to_event.split("/")[-1]
     path_to_dir = "/".join(path_to_event.split("/")[:-1])
 
+    logname = path_to_curve + ".log"
+
     xsel_cmd = f"""
-        xselect << EOF
+        xselect > {logname} 2>&1 << EOF
         xsel
         read event {event_file}
         {path_to_dir}

@@ -83,8 +83,7 @@ class DataBucket():
                                   obsid, name_event])
         if os.path.exists(path_to_event) is False:
             raise FileExistsError(
-                f"{path_to_event} does not exists."
-                )
+                f"{path_to_event} does not exists.")
 
         energy_range_kev = list(energy_range_kev)
         energy_range_kev[0] = _tidy_float2int(energy_range_kev[0])
