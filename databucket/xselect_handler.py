@@ -97,7 +97,6 @@ def run_xselect_curve(path_to_event: str,
         path_to_event, path_to_curve, dt,
         energy_range, satelite)
 
-    print(os.getcwd())
     bash_cmd = ["bash", path_to_script]
 
     subprocess.run(bash_cmd)
