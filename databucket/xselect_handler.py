@@ -29,7 +29,7 @@ def _make_command(path_to_event, path_to_curve,
         set binsize {dt}
 
         filter pha_cutoff {pi_lower+1} {pi_upper}
-        ext curve
+        ext curve offset=no
         save curve {path_to_curve}
 
         exit
