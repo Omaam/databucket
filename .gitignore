@@ -130,3 +130,5 @@ dmypy.json
 
 # My ignore
 path_to_bucket.txt
+data/*
+!data/README.txt
