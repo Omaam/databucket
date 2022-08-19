@@ -7,7 +7,7 @@ import subprocess
 
 
 def _calc_kev2pi(satelite: str):
-    if satelite == "NICER":
+    if satelite == "nicer":
         return 100
 
 
@@ -47,7 +47,7 @@ def _make_bashscript(path_to_event: str,
                      path_to_curve: str,
                      dt: float,
                      energy_range: list,
-                     satelite: str = "NICER"):
+                     satelite: str):
     """
     """
 
