@@ -13,7 +13,8 @@ from databucket import name
 
 def acquire_backetpath():
     try:
-        path_to_bucket = os.environ["DATABUCKET"]
+        path_to_bucket = os.path.abspath(
+            f"{__file__}/../../cache")
     except KeyError:
         raise KeyError(
                 "You must specify bucket path to DATABUCKET. "
