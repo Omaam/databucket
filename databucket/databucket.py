@@ -100,9 +100,11 @@ class DataBucket():
 
         mustrun = _must_run_xselect(path_to_curve, clobber)
         if mustrun is True:
+            print("Run xselect")
             xselect_handler.run_xselect_curve(
                 path_to_event, path_to_curve,
-                dt, energy_range_kev, "NICER")
+                dt, energy_range_kev, self.satelite)
+            print("Finish xselect")
 
         table = Table.read(path_to_curve, format="fits", hdu=1)
         df = table.to_pandas()
