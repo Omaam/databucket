@@ -22,19 +22,14 @@ def _acquire_dirname(object_name: str):
     return dirname
 
 
-def _convert_value2string(value: int or float):
-    value_str = str(value).replace(".", "p")
-    return value_str
-
-
 def _convert_enrange2string(energy_range_kev):
-    energy_lower = _convert_value2string(energy_range_kev[0])
-    energy_upper = _convert_value2string(energy_range_kev[1])
+    energy_lower = str(energy_range_kev[0]).replace(".", "p")
+    energy_upper = str(energy_range_kev[1]).replace(".", "p")
     return energy_lower + "t" + energy_upper
 
 
 def _get_curvename(obsid, dt, energy_range_kev):
-    dt_exp = "{:.0e}".format(dt)
+    dt_exp = "{:.5f}".format(dt).replace(".", "p")
     enrange = _convert_enrange2string(energy_range_kev)
     name_curve = f"curve_{obsid}_dt{dt_exp}_range{enrange}kev.lc"
 
